@@ -6,6 +6,7 @@ import (
 	d3 "aoc/lib/day3"
 	d4 "aoc/lib/day4"
 	d5 "aoc/lib/day5"
+	d6 "aoc/lib/day6"
 	"fmt"
 	"os"
 )
@@ -57,4 +58,13 @@ func main() {
 			d5.P2()
 		}
 	}
+
+	if day == "6" {
+		if part == "1" {
+			d6.P1()
+		} else {
+			d6.P2()
+		}
+	}
+
 }
