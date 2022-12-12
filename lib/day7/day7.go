@@ -18,6 +18,7 @@ type directory_node struct {
 	name     string
 	children map[string]fs_node
 	parent   *directory_node
+	size     int
 }
 
 type file_node struct {
@@ -26,11 +27,7 @@ type file_node struct {
 }
 
 func (node *directory_node) get_size() int {
-	sum := 0
-	for _, child := range node.children {
-		sum += child.get_size()
-	}
-	return sum
+	return node.size
 }
 
 func (node *directory_node) get_name() string {
@@ -50,10 +47,31 @@ func (node *directory_node) add_child(child fs_node) {
 	if !exists {
 		node.children[child.get_name()] = child
 	}
+	node.size += child.get_size()
+	cur := node
+	// bubble up the size
+	for cur := cur.parent; cur != nil; cur = cur.parent {
+		cur.size += child.get_size()
+	}
 }
 
 func new_dir(name string, parent *directory_node) *directory_node {
-	return &directory_node{name: name, children: make(map[string]fs_node), parent: parent}
+	return &directory_node{name: name, children: make(map[string]fs_node), parent: parent, size: 0}
+}
+
+// n * n op... memoizing would make this better
+func crawl_tree(cur *directory_node, dirs *[]*directory_node, filter_fn func(int) bool) {
+	size := cur.get_size()
+	if filter_fn(size) {
+		*dirs = append(*dirs, cur)
+	}
+	for _, child := range cur.children {
+		c, ok := child.(*directory_node)
+		if ok {
+			// craw subdirs
+			crawl_tree(c, dirs, filter_fn)
+		}
+	}
 }
 
 func P1() {
@@ -75,7 +93,6 @@ func P1() {
 	output_mode := false
 	for scanner.Scan() {
 		line := scanner.Text()
-		log.Println(line)
 		tokens := strings.Split(line, " ")
 		if tokens[0] == "$" {
 			output_mode = false
@@ -88,7 +105,6 @@ func P1() {
 					} else if tokens[2] == "/" {
 						cur = root
 					} else {
-						log.Println("chaning dir to", tokens[2])
 						new_dir_name := tokens[2]
 						c, ok := cur.children[new_dir_name].(*directory_node)
 						if !ok {
@@ -120,7 +136,36 @@ func P1() {
 		}
 	}
 
-	log.Println("total fs size is ", root.get_size())
+	var dirs []*directory_node
+	small_filter := func(size int) bool {
+		return size <= 100000
+	}
+	sum := 0
+	crawl_tree(root, &dirs, small_filter)
+	for _, dir := range dirs {
+		sum += dir.get_size()
+	}
+	log.Println("sum of small dirs is", sum)
+
+	// how do make math.maxint var
+	current_min_dir := 1000000000000
+
+	used_space := root.get_size()
+	available_space := 70000000 - used_space
+	required_space := 30000000 - available_space
+
+	min_size_filter := func(size int) bool {
+		return size >= required_space
+	}
+
+	dirs = []*directory_node{}
+	crawl_tree(root, &dirs, min_size_filter)
+	for _, dir := range dirs {
+		if dir.get_size() < current_min_dir {
+			current_min_dir = dir.get_size()
+		}
+	}
+	log.Println("smallest dir over threshold is", current_min_dir)
 }
 
 func P2() {
