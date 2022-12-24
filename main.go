@@ -3,6 +3,7 @@ package main
 import (
 	d1 "aoc/lib/day1"
 	d10 "aoc/lib/day10"
+	d11 "aoc/lib/day11"
 	d2 "aoc/lib/day2"
 	d3 "aoc/lib/day3"
 	d4 "aoc/lib/day4"
@@ -100,5 +101,11 @@ func main() {
 			d10.P2()
 		}
 	}
-
+	if day == "11" {
+		if part == "1" {
+			d11.P1()
+		} else {
+			d11.P1()
+		}
+	}
 }
